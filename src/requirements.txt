@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+pandas
+numpy
+faiss-cpu
+gunicorn

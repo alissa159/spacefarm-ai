@@ -1,5 +1,6 @@
 # main.py
 import os
+import re
 from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +50,18 @@ async def chat_with_bot(request: QueryRequest, _=Depends(validate_service_key)):
     Spring이 이 엔드포인트를 호출할 때 반드시 헤더 `X-Service-Key: <SERVICE_KEY>`를 포함해야 합니다.
     """
     try:
+        query_text = (request.query or "").strip()
+
+        # 1) '병해진단' 관련 키워드 감지 (띄어쓰기 변형도 허용)
+        #    예: "병해진단", "병 해 진단", "병해 진단" 등 모두 매칭
+        if re.search(r"병\s*해\s*진단", query_text):
+            # 사용자에게 프론트의 '병해진단' 버튼을 눌러 사진을 업로드하라고 안내
+            prompt = (
+                "병해진단을 도와드릴게요. 아래의 '병해 진단' 버튼을 누르고 증상 사진을 업로드해 주세요."
+            )
+            # 간단 텍스트 응답(프론트가 문자열만 기대하는 경우 안전)
+            return {"response": prompt}
+        
         response_text = chatbot_instance.get_answer(request.query, prefer_faq_direct=True)
         return {"response": response_text}
     except Exception as e:
